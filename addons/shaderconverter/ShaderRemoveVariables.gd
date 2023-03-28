@@ -5,6 +5,6 @@ class_name ShaderRemoveVariables
 
 const removings: PackedStringArray = [
 	"(.*)(TAU)\\s*[=](.*)\\n",
-#	"(.*)(PI)\\s*[=](.*)\\n",
-#	"(.*)(E)\\s*[=](.*)\\n"
+	"(.*)(PI)\\s*[=](.*)\\n",
+	"(.*)(E)\\s*[=](.*)\\n"
 ]

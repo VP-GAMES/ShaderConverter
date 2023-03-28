@@ -44,9 +44,8 @@ func _fix_shader_file(file_path: String) -> void:
 	var content: String = file.get_as_text()
 	content = _shader_renamings_fix(content, file_path)
 	content = _shader_renamings_with_variables_fix(content, file_path)
-	#content = _shader_remove_variables_fix(content, file_path)
+	content = _shader_remove_variables_fix(content, file_path)
 	file.store_string(content)
-	file.close()
 
 func _shader_renamings_fix(content: String, file_path: String) -> String:
 	for old_name in ShaderRenamings.renamings:
