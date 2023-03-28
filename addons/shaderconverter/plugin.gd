@@ -6,13 +6,18 @@ extends EditorPlugin
 const _base_path: String = "res://"
 var _resource_filesystem: EditorFileSystem = get_editor_interface().get_resource_filesystem()
 
-func _enter_tree():
-	_on_filesystem_changed()
-	#_resource_filesystem.filesystem_changed.connect(_on_filesystem_changed)
+func _enter_tree() -> void:
+	# TODO Add autoconvert after this implementation: https://github.com/godotengine/godot-proposals/issues/2131
+	_shaders_to_gdshaders()
+	add_tool_menu_item("Convert shaders to gdshaders", _shaders_to_gdshaders)
 
-func _on_filesystem_changed() -> void:
-	print("filesystem_changed")
+func _shaders_to_gdshaders() -> void:
+	print("\n\n *** Start convert shaders to gdshaders ***\n")
 	dir_contents("res://")
+	print("\n *** End convert shaders to gdshaders ***\n")
+
+func _exit_tree():
+	remove_tool_menu_item("Convert shaders to gdshaders")
 
 func dir_contents(path: String):
 	var actualpath = path 
@@ -30,6 +35,7 @@ func dir_contents(path: String):
 					var file_path = file_path_new
 					file_path_new = actualpath + "/" + file_name.replace(".shader", ".gdshader")
 					dir.rename(file_path, file_path_new)
+					print(file_path_new)
 				if file_path_new.ends_with(".gdshader"):
 					_fix_shader_file(file_path_new)
 			file_name = dir.get_next()
