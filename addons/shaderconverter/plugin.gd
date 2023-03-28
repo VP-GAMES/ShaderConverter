@@ -37,15 +37,17 @@ func dir_contents(path: String):
 		print("An error occurred when trying to access the path.")
 	dir.list_dir_end()
 	_resource_filesystem.scan()
+	_resource_filesystem.scan_sources()
 
 func _fix_shader_file(file_path: String) -> void:
-	print(file_path)
-	var file: FileAccess = FileAccess.open(file_path, FileAccess.READ_WRITE)
-	var content: String = file.get_as_text()
+	var file_read: FileAccess = FileAccess.open(file_path, FileAccess.READ)
+	var content = file_read.get_as_text()
 	content = _shader_renamings_fix(content, file_path)
 	content = _shader_renamings_with_variables_fix(content, file_path)
 	content = _shader_remove_variables_fix(content, file_path)
-	file.store_string(content)
+
+	var file_write: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
+	file_write.store_string(content)
 
 func _shader_renamings_fix(content: String, file_path: String) -> String:
 	for old_name in ShaderRenamings.renamings:
