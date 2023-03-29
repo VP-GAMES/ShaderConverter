@@ -5,6 +5,7 @@ extends EditorPlugin
 
 const _base_path: String = "res://"
 var _resource_filesystem: EditorFileSystem = get_editor_interface().get_resource_filesystem()
+var _files_to_update: Array[String] = []
 
 func _enter_tree() -> void:
 	# TODO Add autoconvert after this implementation: https://github.com/godotengine/godot-proposals/issues/2131
@@ -20,6 +21,7 @@ func _exit_tree():
 	remove_tool_menu_item("Convert shaders to gdshaders")
 
 func dir_contents(path: String):
+	_files_to_update.clear()
 	var actualpath = path 
 	var dir = DirAccess.open(path)
 	if dir:
@@ -34,8 +36,9 @@ func dir_contents(path: String):
 					# Rename shader files
 					var file_path = file_path_new
 					file_path_new = actualpath + "/" + file_name.replace(".shader", ".gdshader")
+					_append_file_to_update(file_path_new)
 					dir.rename(file_path, file_path_new)
-					print(file_path_new)
+					print("RENAMED: ", file_path, " to ", file_path_new)
 				if file_path_new.ends_with(".gdshader"):
 					_fix_shader_file(file_path_new)
 			file_name = dir.get_next()
@@ -44,6 +47,7 @@ func dir_contents(path: String):
 	dir.list_dir_end()
 	_resource_filesystem.scan()
 	_resource_filesystem.scan_sources()
+	_resource_filesystem.reimport_files(_files_to_update)
 
 func _fix_shader_file(file_path: String) -> void:
 	var file_read: FileAccess = FileAccess.open(file_path, FileAccess.READ)
@@ -51,6 +55,7 @@ func _fix_shader_file(file_path: String) -> void:
 	content = _shader_renamings_fix(content, file_path)
 	content = _shader_renamings_with_variables_fix(content, file_path)
 	content = _shader_remove_variables_fix(content, file_path)
+	content = _shader_type_particles_rename_functions(content, file_path)
 
 	var file_write: FileAccess = FileAccess.open(file_path, FileAccess.WRITE)
 	file_write.store_string(content)
@@ -58,14 +63,17 @@ func _fix_shader_file(file_path: String) -> void:
 func _shader_renamings_fix(content: String, file_path: String) -> String:
 	for old_name in ShaderRenamings.renamings:
 		if content.contains(old_name):
+			_append_file_to_update(file_path)
 			content = content.replacen(old_name, ShaderRenamings.renamings[old_name])
 	return content
 
 func _shader_renamings_with_variables_fix(content: String, file_path: String) -> String:
 	for old_name in ShaderRenamingsWithVariables.renamings:
 		if content.contains(old_name):
+			_append_file_to_update(file_path)
 			content = content.replacen(old_name, ShaderRenamingsWithVariables.renamings[old_name][0])
 			for shader_type_line in ShaderRenamingsWithVariables.shader_types_list:
+				_append_file_to_update(file_path)
 				content = content.replace(shader_type_line, shader_type_line + ShaderRenamingsWithVariables.renamings[old_name][1])
 	return content
 
@@ -74,5 +82,20 @@ func _shader_remove_variables_fix(content: String, file_path: String) -> String:
 		var regex = RegEx.new()
 		regex.compile(to_remove)
 		if regex.search(content):
+			_append_file_to_update(file_path)
 			content = regex.sub(content, "")
 	return content
+
+func _shader_type_particles_rename_functions(content: String, file_path: String) -> String:
+	if content.contains(ShaderRenamingsWithFunctions.shader_type_particles):
+		for renaming_regex in ShaderRenamingsWithFunctions.renamings_regex:
+			var regex = RegEx.new()
+			regex.compile(renaming_regex)
+			if regex.search(content):
+				_append_file_to_update(file_path)
+				content = regex.sub(content, ShaderRenamingsWithFunctions.renamings_regex[renaming_regex])
+	return content
+
+func _append_file_to_update(file_path: String) -> void:
+	if not _files_to_update.has(file_path):
+		_files_to_update.append(file_path)
