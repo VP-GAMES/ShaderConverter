@@ -4,21 +4,23 @@
 extends EditorPlugin
 
 const _base_path: String = "res://"
+const _tool_item: String = "Convert Shaders 3.x to GDShaders 4.x"
+
 var _resource_filesystem: EditorFileSystem = get_editor_interface().get_resource_filesystem()
 var _files_to_update: Array[String] = []
 
 func _enter_tree() -> void:
 	# TODO Add autoconvert after this implementation: https://github.com/godotengine/godot-proposals/issues/2131
 	_shaders_to_gdshaders()
-	add_tool_menu_item("Convert shaders to gdshaders", _shaders_to_gdshaders)
+	add_tool_menu_item(_tool_item, _shaders_to_gdshaders)
 
 func _shaders_to_gdshaders() -> void:
-	print("\n\n *** Start convert shaders to gdshaders ***\n")
-	dir_contents("res://")
-	print("\n *** End convert shaders to gdshaders ***\n")
+	print("\n\n *** Start convert shaders ***\n")
+	dir_contents(_base_path)
+	print("\n *** End convert shaders ***\n")
 
 func _exit_tree():
-	remove_tool_menu_item("Convert shaders to gdshaders")
+	remove_tool_menu_item(_tool_item)
 
 func dir_contents(path: String):
 	_files_to_update.clear()
