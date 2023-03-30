@@ -1,5 +1,6 @@
 # ShaderConverter
 Convert Shaders 3.x to GDShaders 4.x
+Version 1.1.1
 
 ### How to
 
